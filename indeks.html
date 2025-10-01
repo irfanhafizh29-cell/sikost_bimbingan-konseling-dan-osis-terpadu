@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIKOST - Aplikasi Konseling & OSIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link:hover {
+            background-color: #1e40af; /* a darker blue */
+        }
+        .sidebar-link-active {
+            background-color: #1e3a8a; /* an even darker blue for active state */
+            font-weight: 600;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #60a5fa;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+        .prose { max-width: none; }
+        .prose h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .prose p, .prose ul, .prose ol { margin-bottom: 1rem; }
+        .prose ul, .prose ol { list-style-position: inside; padding-left: 1rem;}
+        .prose li { margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="bg-blue-50">
+    <div id="app" class="transition-all duration-300"></div>
+
+    <script type="module">
+        // Initializing Lucide icons
+        lucide.createIcons();
+
+        // --- APLIKASI UTAMA ---
+        const app = document.getElementById('app');
+
+        // --- DATABASE SIMULASI ---
+        const db = {
+            users: [
+                { id: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso', isOsis: true },
+                { id: 'siswa2', password: '123', role: 'siswa', name: 'Ani Yudhoyono' },
+                { id: 'gofaru', password: '123', role: 'guru_bk', name: 'Pak Gofarudiansyah' },
+                { id: 'rohman', password: '123', role: 'guru_bk', name: 'Pak Rohman' },
+                { id: 'osis1', password: '123', role: 'osis', name: 'Citra Kirana', position: 'Ketua OSIS' },
+                { id: 'pembina1', password: '123', role: 'pembina', name: 'Drs. Hartono' },
+                { id: 'gurumapel1', password: '123', role: 'guru_mapel', name: 'Ibu Susi (Matematika)' }
+            ],
+            appointments: [
+                { id: 1, studentId: 'siswa1', counselorId: 'gofaru', date: '2025-10-05', time: '10:00', topic: 'Kesulitan Belajar', status: 'Disetujui' },
+                { id: 2, studentId: 'siswa2', counselorId: 'gofaru', date: '2025-10-06', time: '14:00', topic: 'Masalah Pertemanan', status: 'Menunggu' },
+            ],
+            behaviorReports: [
+                { id: 1, studentId: 'siswa1', teacherId: 'gurumapel1', date: '2025-09-30', report: 'Budi sangat aktif bertanya di kelas Matematika hari ini. Pertahankan!' }
+            ],
+            studentTasks: [
+                { id: 1, studentId: 'siswa1', teacherId: 'gurumapel1', date: '2025-09-28', task: 'Presentasi Kelompok', score: 85, notes: 'Mampu memimpin kelompok dengan baik.'}
+            ],
+            chats: {
+                'siswa1-gofaru': [
+                    { sender: 'siswa1', text: 'Selamat pagi, Pak. Saya ingin bertanya sesuatu.', timestamp: new Date().setHours(8, 0) },
+                    { sender: 'gofaru', text: 'Pagi, Budi. Silakan, apa yang bisa Bapak bantu?', timestamp: new Date().setHours(8, 5) },
+                ],
+                 'siswa2-rohman': [
+                    { sender: 'siswa2', text: 'Permisi Pak Rohman, saya mau konsultasi.', timestamp: new Date().setHours(9, 15) },
+                ]
+            },
+            articles: [
+                { 
+                    id: 3, 
+                    title: '🧠 5 Cara Mengatasi Stres Menjelang Ujian', 
+                    content: 'Stres menjelang ujian adalah hal yang wajar, tapi jika dibiarkan berlebihan, bisa mengganggu konsentrasi...',
+                    fullContent: `<div class="prose"><h3>✅ 1. Buat Jadwal Belajar yang Teratur</h3>
+<p>“Waktu yang terencana adalah setengah dari keberhasilan.”</p>
+<ul>
+    <li>Bagi waktu belajar menjadi sesi pendek (misalnya 30–45 menit).</li>
+    <li>Gunakan teknik seperti Pomodoro (25 menit belajar, 5 menit istirahat).</li>
+    <li>Fokus pada materi yang paling penting terlebih dahulu.</li>
+</ul>
+<p><em>📝 Tips: Gunakan kalender atau aplikasi pengingat supaya kamu tetap konsisten.</em></p>
+
+<h3>✅ 2. Jaga Pola Tidur dan Makan</h3>
+<p>“Otak yang sehat berasal dari tubuh yang sehat.”</p>
+<ul>
+    <li>Hindari begadang, terutama saat mendekati hari ujian.</li>
+    <li>Tidur minimal 7–8 jam sehari agar otak bisa menyimpan informasi lebih baik.</li>
+    <li>Makan makanan bergizi (hindari kafein berlebihan dan junk food).</li>
+</ul>
+<p><em>🥦 Tips: Sarapan sehat sebelum belajar atau ujian bisa meningkatkan konsentrasi.</em></p>
+
+<h3>✅ 3. Kurangi Gangguan dan Fokus pada Diri Sendiri</h3>
+<p>“Hindari membandingkan diri dengan orang lain.”</p>
+<ul>
+    <li>Jangan terlalu sering melihat progres belajar teman, apalagi di media sosial.</li>
+    <li>Fokus pada apa yang bisa kamu kontrol: waktu belajar, pemahaman, dan persiapan diri.</li>
+</ul>
+<p><em>📵 Tips: Gunakan mode “Do Not Disturb” di HP saat belajar.</em></p>
+
+<h3>✅ 4. Lakukan Relaksasi Ringan</h3>
+<p>“Tubuh rileks, pikiran pun tenang.”</p>
+<ul>
+    <li>Coba teknik pernapasan: tarik napas dalam-dalam, tahan 4 detik, hembuskan perlahan.</li>
+    <li>Bisa juga dengan jalan kaki sebentar, mendengarkan musik yang menenangkan, atau meditasi ringan.</li>
+</ul>
+<p><em>🧘 Tips: Cukup 5–10 menit relaksasi bisa mengurangi ketegangan.</em></p>
+
+<h3>✅ 5. Berani Minta Bantuan</h3>
+<p>“Kamu tidak sendiri, dan tidak harus menghadapinya sendirian.”</p>
+<ul>
+    <li>Ceritakan rasa cemasmu ke guru BK, orang tua, atau teman dekat.</li>
+    <li>Jangan ragu bertanya ke guru jika ada materi yang belum dipahami.</li>
+    <li>Bisa juga ikut kelompok belajar supaya kamu merasa lebih siap.</li>
+</ul>
+<p><em>🤝 Tips: Konseling bisa jadi tempat yang aman untuk menenangkan pikiran.</em></p>
+
+<p><strong>🌟 Penutup:</strong><br>Stres menjelang ujian bisa diatasi dengan persiapan yang matang, istirahat cukup, dan menjaga mental tetap tenang. Ingat, ujian bukan akhir segalanya—tetapi bagian dari proses belajar kamu.</p></div>`,
+                    author: 'Pak Gofarudiansyah', 
+                    category: 'Manajemen Stres',
+                    publishedDate: '2025-09-25'
+                },
+                { 
+                    id: 4, 
+                    title: 'Kunci Sukses Belajar: 7 Tips Manajemen Waktu', 
+                    content: 'Manajemen waktu adalah salah satu skill terpenting yang harus dimiliki setiap siswa. Dengan mengatur waktu...',
+                    fullContent: `<div class="prose"><p>Manajemen waktu adalah kunci untuk belajar lebih cerdas, bukan lebih keras. Berikut 7 tips yang bisa kamu terapkan:</p>
+<ol>
+    <li><strong>Buat Daftar Prioritas:</strong> Gunakan matriks Eisenhower (Penting & Mendesak, Penting & Tidak Mendesak, dst.) untuk menentukan tugas mana yang harus dikerjakan lebih dulu.</li>
+    <li><strong>Gunakan Kalender:</strong> Catat semua tenggat waktu tugas, ujian, dan kegiatan lainnya. Ini membantumu melihat gambaran besar.</li>
+    <li><strong>Atur Waktu Belajar:</strong> Tentukan waktu spesifik setiap hari untuk belajar dan patuhi jadwal tersebut seolah-olah itu adalah janji penting.</li>
+    <li><strong>Hindari Multitasking:</strong> Fokus pada satu tugas pada satu waktu. Multitasking sering kali justru menurunkan produktivitas dan kualitas pekerjaan.</li>
+    <li><strong>Ambil Jeda Teratur:</strong> Otakmu butuh istirahat. Teknik Pomodoro (25 menit kerja, 5 menit istirahat) sangat efektif untuk menjaga fokus.</li>
+    <li><strong>Rapikan Area Belajar:</strong> Lingkungan yang bersih dan terorganisir membantu pikiranmu tetap jernih dan tidak mudah terganggu.</li>
+    <li><strong>Evaluasi di Akhir Hari:</strong> Luangkan 5-10 menit sebelum tidur untuk meninjau apa yang sudah kamu capai dan merencanakan hari esok.</li>
+</ol></div>`,
+                    author: 'Pak Rohman', 
+                    category: 'Tips Belajar',
+                    publishedDate: '2025-09-22'
+                },
+                { 
+                    id: 5, 
+                    title: '🚀 Cara Meningkatkan Kepercayaan Diri di Sekolah', 
+                    content: 'Merasa minder atau kurang percaya diri adalah hal yang normal. Namun, kamu bisa mengatasinya dengan...',
+                    fullContent: `<div class="prose"><p>Kepercayaan diri adalah fondasi kesuksesan, baik di bidang akademik maupun sosial. Berikut cara membangunnya:</p>
+<ul>
+    <li><strong>Kenali Kelebihanmu:</strong> Setiap orang punya bakat. Mungkin kamu jago olahraga, seni, atau matematika. Fokus dan kembangkan kelebihanmu itu.</li>
+    <li><strong>Tetapkan Tujuan Kecil:</strong> Jangan langsung menargetkan hal besar. Mulailah dari tujuan-tujuan kecil yang bisa kamu capai. Setiap keberhasilan kecil akan membangun rasa percaya dirimu.</li>
+    <li><strong>Berpenampilan Rapi:</strong> Cara kamu berpakaian dan merawat diri memengaruhi cara kamu merasa. Berpakaian rapi bisa membuatmu merasa lebih baik tentang dirimu sendiri.</li>
+    <li><strong>Berani Berpendapat:</strong> Jangan takut untuk angkat tangan di kelas atau memberikan ide saat diskusi kelompok. Suaramu berharga.</li>
+    <li><strong>Jangan Bandingkan Diri:</strong> Ingat, setiap orang punya perjalanannya masing-masing. Fokus pada kemajuan dirimu sendiri, bukan pencapaian orang lain.</li>
+</ul></div>`,
+                    author: 'Pak Gofarudiansyah', 
+                    category: 'Pengembangan Diri',
+                    publishedDate: '2025-09-28'
+                },
+                { 
+                    id: 6, 
+                    title: '🤝 Membangun Pertemanan yang Sehat dan Positif', 
+                    content: 'Teman adalah bagian penting dari kehidupan sekolah. Pertemanan yang sehat bisa membuatmu lebih semangat...',
+                    fullContent: `<div class="prose"><p>Lingkungan pertemanan sangat memengaruhi semangat dan kebahagiaanmu di sekolah. Berikut ciri-ciri pertemanan yang sehat:</p>
+<ul>
+    <li><strong>Saling Mendukung:</strong> Teman yang baik akan ikut senang saat kamu berhasil dan memberimu semangat saat kamu gagal.</li>
+    <li><strong>Bisa Dipercaya:</strong> Kamu bisa bercerita tentang apa pun tanpa takut dihakimi atau rahasiamu dibocorkan.</li>
+    <li><strong>Menghargai Perbedaan:</strong> Kalian tidak harus selalu setuju dalam segala hal. Teman yang baik menghargai opinimu meskipun berbeda.</li>
+    <li><strong>Jujur tapi Baik:</strong> Mereka berani memberimu kritik yang membangun dengan cara yang tidak menyakitkan.</li>
+    <li><strong>Tidak Membawa Pengaruh Buruk:</strong> Pertemanan yang sehat tidak akan menjerumuskanmu ke dalam hal-hal negatif.</li>
+</ul></div>`,
+                    author: 'Pak Rohman', 
+                    category: 'Sosial',
+                    publishedDate: '2025-09-26'
+                },
+                { 
+                    id: 7, 
+                    title: '💡 Jangan Takut Gagal: Jadikan Kesalahan Guru Terbaik', 
+                    content: 'Semua orang pernah gagal, bahkan orang-orang sukses sekalipun. Kunci utamanya adalah bagaimana kamu bangkit...',
+                    fullContent: `<div class="prose"><p>Banyak orang takut gagal sehingga mereka tidak berani mencoba. Padahal, kegagalan adalah bagian tak terpisahkan dari proses belajar. Ubah cara pandangmu terhadap kegagalan:</p>
+<ul>
+    <li><strong>Kegagalan Bukan Akhir:</strong> Anggaplah kegagalan sebagai umpan balik (feedback). Ia memberitahumu cara mana yang tidak berhasil, sehingga kamu bisa mencoba cara lain.</li>
+    <li><strong>Identifikasi Penyebabnya:</strong> Setelah gagal, jangan hanya meratapinya. Cari tahu apa yang salah. Apakah persiapanmu kurang? Apakah strategimu keliru?</li>
+    <li><strong>Ambil Pelajarannya:</strong> Setiap kesalahan mengandung pelajaran berharga yang tidak akan kamu dapatkan jika kamu selalu berhasil.</li>
+    <li><strong>Coba Lagi dengan Lebih Cerdas:</strong> Gunakan pelajaran yang kamu dapat untuk mencoba lagi dengan pendekatan yang lebih baik.</li>
+</ul>
+<p>Ingat kutipan dari Thomas Edison: "Saya tidak gagal. Saya hanya menemukan 10.000 cara yang tidak akan berhasil."</p></div>`,
+                    author: 'Pak Gofarudiansyah', 
+                    category: 'Motivasi',
+                    publishedDate: '2025-09-24'
+                }
+            ],
+            proposals: [
+                { id: 1, title: 'Lomba Cerdas Cermat Antar Kelas', pic: 'Citra Kirana', date: '2025-11-15', budget: 1500000, description: 'Meningkatkan semangat kompetisi siswa.', status: 'Disetujui' },
+                { id: 2, title: 'Bakti Sosial Panti Asuhan', pic: 'Citra Kirana', date: '2025-12-20', budget: 3000000, description: 'Menumbuhkan rasa kepedulian sosial.', status: 'Menunggu' }
+            ],
+            finances: [
+                { id: 1, date: '2025-09-01', description: 'Dana Awal OSIS', type: 'Pemasukan', amount: 5000000 },
+                { id: 2, date: '2025-09-10', description: 'Pembelian Spanduk HUT Sekolah', type: 'Pengeluaran', amount: 250000 },
+            ],
+            forum: [
+                { id: 1, title: 'Pembahasan Rencana Class Meeting', author: 'Citra Kirana', replies: [{author: 'Budi Santoso', text: 'Setuju, kita adakan di minggu kedua Desember.'}]}
+            ]
+        };
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            currentUser: null,
+            currentPage: 'dashboard',
+            activeChatUserId: null,
+            modal: {
+                isOpen: false,
+                content: ''
+            }
+        };
+
+        // --- FUNGSI UTAMA RENDER ---
+        function render() {
+            lucide.createIcons();
+            if (state.modal.isOpen) {
+                renderModal();
+            } else {
+                const existingModal = document.getElementById('modal-backdrop');
+                if (existingModal) existingModal.remove();
+            }
+
+            if (!state.currentUser) {
+                app.innerHTML = LoginPage();
+                attachLoginListener();
+                return;
+            }
+
+            const sidebar = Sidebar();
+            let content = '';
+            
+            const role = state.currentUser.role;
+            switch(role) {
+                case 'siswa':
+                    switch (state.currentPage) {
+                        case 'dashboard': content = SiswaDashboard(); break;
+                        case 'janji-temu': content = SiswaJanjiTemu(); break;
+                        case 'chat': content = SiswaChat(); break;
+                        case 'materi': content = MateriPage(); break;
+                        case 'pantau-diri': content = PantauDiriPage(); break;
+                        case 'proposal': if(state.currentUser.isOsis) content = OsisProposal(); break;
+                        case 'keuangan': if(state.currentUser.isOsis) content = OsisKeuangan(); break;
+                        case 'forum': if(state.currentUser.isOsis) content = OsisForum(); break;
+                        default: content = SiswaDashboard();
+                    }
+                    break;
+                case 'guru_bk':
+                    switch (state.currentPage) {
+                        case 'dashboard': content = GuruBKDashboard(); break;
+                        case 'janji-temu': content = GuruBKJanjiTemu(); break;
+                        case 'chat': content = GuruBKChat(); break;
+                        case 'materi': content = MateriPage(true); break;
+                        default: content = GuruBKDashboard();
+                    }
+                    break;
+                case 'osis':
+                    switch (state.currentPage) {
+                        case 'dashboard': content = OsisDashboard(); break;
+                        case 'proposal': content = OsisProposal(); break;
+                        case 'keuangan': content = OsisKeuangan(); break;
+                        case 'forum': content = OsisForum(); break;
+                        default: content = OsisDashboard();
+                    }
+                    break;
+                case 'pembina':
+                     switch (state.currentPage) {
+                        case 'dashboard': content = PembinaDashboard(); break;
+                        case 'proposal': content = OsisProposal(true); break;
+                        case 'keuangan': content = OsisKeuangan(); break;
+                        default: content = PembinaDashboard();
+                    }
+                    break;
+                case 'guru_mapel':
+                    switch (state.currentPage) {
+                        case 'dashboard': content = GuruMapelDashboard(); break;
+                        case 'lapor-perilaku': content = LaporPerilakuPage(); break;
+                        case 'pekerjaan-siswa': content = PekerjaanSiswaPage(); break;
+                        default: content = GuruMapelDashboard();
+                    }
+                    break;
+            }
+            
+            app.innerHTML = `
+                <div class="flex h-screen bg-gray-100">
+                    ${sidebar}
+                    <div class="flex-1 flex flex-col overflow-hidden">
+                        ${Header()}
+                        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-blue-50">
+                            <div class="container mx-auto px-6 py-8">
+                                ${content}
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            `;
+            attachEventListeners();
+        }
+        
+        // --- EVENT LISTENERS ---
+        function attachEventListeners() {
+            document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    state.currentPage = e.currentTarget.getAttribute('data-page');
+                    render();
+                });
+            });
+
+            const role = state.currentUser.role;
+            if (role === 'siswa') {
+                if (state.currentPage === 'dashboard') attachSiswaDashboardListeners();
+                if (state.currentPage === 'janji-temu') attachSiswaJanjiTemuListeners();
+                if (state.currentPage === 'chat') attachSiswaChatListeners();
+                if (state.currentPage === 'materi') attachMateriPageListeners();
+                if (state.currentUser.isOsis) {
+                    if (state.currentPage === 'proposal') attachOsisProposalListeners();
+                    if (state.currentPage === 'keuangan') attachOsisKeuanganListeners();
+                    if (state.currentPage === 'forum') attachOsisForumListeners();
+                }
+            } else if (role === 'guru_bk') {
+                if(state.currentPage === 'janji-temu') attachGuruBKJanjiTemuListeners();
+                if(state.currentPage === 'chat') attachGuruBKChatListeners();
+                if(state.currentPage === 'materi') attachMateriPageListeners(true);
+            } else if (role === 'osis' || role === 'pembina') {
+                if (state.currentPage === 'proposal') attachOsisProposalListeners(role === 'pembina');
+                if (state.currentPage === 'keuangan') attachOsisKeuanganListeners();
+                 if (role === 'osis' && state.currentPage === 'forum') attachOsisForumListeners();
+            } else if (role === 'guru_mapel') {
+                if (state.currentPage === 'lapor-perilaku') attachLaporPerilakuListeners();
+                if (state.currentPage === 'pekerjaan-siswa') attachPekerjaanSiswaListeners();
+            }
+        }
+        
+        // --- LOGIN & LOGOUT ---
+        function LoginPage() {
+            return `
+            <div class="min-h-screen bg-blue-800 flex items-center justify-center p-4">
+                <div class="w-full max-w-md">
+                     <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+                         <div class="flex flex-col items-center text-center mb-8">
+                            <i data-lucide="message-circle-heart" class="w-16 h-16 text-blue-600 mb-4"></i>
+                            <h1 class="text-3xl font-bold text-blue-900">Selamat Datang di SIKOST</h1>
+                        </div>
+                        <form id="login-form" class="space-y-6">
+                             <div>
+                                <label for="userId" class="text-sm font-medium text-gray-700">ID Pengguna</label>
+                                <input type="text" id="userId" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: siswa1, gofaru">
+                            </div>
+                            <div>
+                                <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Default: 123">
+                            </div>
+                            <p id="login-error" class="text-red-500 text-sm text-center hidden">ID Pengguna atau Password salah.</p>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors">Masuk</button>
+                        </form>
+                         <div class="text-center text-xs text-gray-400 mt-6">
+                            <p class="font-bold">Akun Siswa:</p>
+                            <p>siswa1 (juga OSIS), siswa2</p>
+                            <p class="font-bold mt-2">Akun Staf:</p>
+                            <p>gofaru, rohman (Guru BK)</p>
+                             <p>osis1, pembina1 (OSIS)</p>
+                             <p>gurumapel1 (Guru Mapel)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function attachLoginListener() {
+            document.getElementById('login-form')?.addEventListener('submit', handleLogin);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+            const user = db.users.find(u => u.id === userId && u.password === password);
+            if (user) {
+                state.currentUser = user;
+                state.currentPage = 'dashboard';
+                render();
+            } else {
+                const errorEl = document.getElementById('login-error');
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout(event) {
+            event.preventDefault();
+            state.currentUser = null;
+            render();
+        }
+
+        // --- HALAMAN & KOMPONEN ---
+        function Header() {
+             return `
+                <header class="flex justify-between items-center py-4 px-6 bg-white border-b-2 border-blue-100">
+                    <div class="flex items-center">
+                       <h1 class="text-xl font-semibold text-blue-800">${state.currentUser.name}</h1>
+                    </div>
+                     <div class="flex items-center">
+                        <button id="logout-btn" class="font-medium text-red-500 hover:text-red-700">Logout</button>
+                    </div>
+                </header>
+            `;
+        }
+        
+        function Sidebar() {
+            const role = state.currentUser.role;
+            let links = '';
+            
+            if (role === 'siswa') {
+                links = `
+                    <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
+                    <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Konseling</h4>
+                    <a href="#" data-page="janji-temu" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'janji-temu' ? 'sidebar-link-active' : ''}"><i data-lucide="calendar-plus" class="w-5 h-5 mr-3"></i>Buat Janji Temu</a>
+                    <a href="#" data-page="chat" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'chat' ? 'sidebar-link-active' : ''}"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i>Chat Privat</a>
+                    <a href="#" data-page="materi" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'materi' ? 'sidebar-link-active' : ''}"><i data-lucide="book-open" class="w-5 h-5 mr-3"></i>Materi Motivasi</a>
+                    <a href="#" data-page="pantau-diri" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'pantau-diri' ? 'sidebar-link-active' : ''}"><i data-lucide="eye" class="w-5 h-5 mr-3"></i>Laporan Perilaku</a>
+                `;
+                if (state.currentUser.isOsis) {
+                    links += `
+                        <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">OSIS</h4>
+                        <a href="#" data-page="proposal" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'proposal' ? 'sidebar-link-active' : ''}"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i>Proposal Kegiatan</a>
+                        <a href="#" data-page="keuangan" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'keuangan' ? 'sidebar-link-active' : ''}"><i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i>Laporan Keuangan</a>
+                        <a href="#" data-page="forum" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'forum' ? 'sidebar-link-active' : ''}"><i data-lucide="users" class="w-5 h-5 mr-3"></i>Forum OSIS</a>
+                    `;
+                }
+            } else if (role === 'guru_bk') {
+                links = `
+                    <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
+                    <a href="#" data-page="janji-temu" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'janji-temu' ? 'sidebar-link-active' : ''}"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i>Kelola Janji Temu</a>
+                    <a href="#" data-page="chat" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'chat' ? 'sidebar-link-active' : ''}"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i>Chat Siswa</a>
+                    <a href="#" data-page="materi" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'materi' ? 'sidebar-link-active' : ''}"><i data-lucide="edit" class="w-5 h-5 mr-3"></i>Kelola Materi</a>
+                `;
+            } else if (role === 'osis') {
+                links = `
+                     <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
+                     <a href="#" data-page="proposal" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'proposal' ? 'sidebar-link-active' : ''}"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i>Proposal Kegiatan</a>
+                     <a href="#" data-page="keuangan" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'keuangan' ? 'sidebar-link-active' : ''}"><i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i>Laporan Keuangan</a>
+                     <a href="#" data-page="forum" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'forum' ? 'sidebar-link-active' : ''}"><i data-lucide="users" class="w-5 h-5 mr-3"></i>Forum OSIS</a>
+                `;
+            } else if (role === 'pembina') {
+                 links = `
+                     <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
+                     <a href="#" data-page="proposal" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'proposal' ? 'sidebar-link-active' : ''}"><i data-lucide="file-check" class="w-5 h-5 mr-3"></i>Persetujuan Proposal</a>
+                     <a href="#" data-page="keuangan" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'keuangan' ? 'sidebar-link-active' : ''}"><i data-lucide="trending-up" class="w-5 h-5 mr-3"></i>Monitoring Keuangan</a>
+                `;
+            } else if (role === 'guru_mapel') {
+                 links = `
+                    <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
+                    <a href="#" data-page="lapor-perilaku" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'lapor-perilaku' ? 'sidebar-link-active' : ''}"><i data-lucide="clipboard-edit" class="w-5 h-5 mr-3"></i>Lapor Perilaku Siswa</a>
+                    <a href="#" data-page="pekerjaan-siswa" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'pekerjaan-siswa' ? 'sidebar-link-active' : ''}"><i data-lucide="book-check" class="w-5 h-5 mr-3"></i>Pekerjaan Siswa</a>
+                `;
+            }
+
+            return `
+                <aside class="w-64 flex-shrink-0 bg-blue-800 text-white flex flex-col">
+                    <div class="h-20 flex items-center justify-center bg-blue-900">
+                        <i data-lucide="message-circle-heart" class="w-10 h-10 mr-2 text-blue-300"></i>
+                        <h1 class="text-2xl font-bold tracking-wider">SIKOST</h1>
+                    </div>
+                    <nav class="flex-1 px-4 py-4 space-y-1">
+                        ${links}
+                    </nav>
+                </aside>
+            `;
+        }
+        
+        // --- DASHBOARDS ---
+        function SiswaDashboard() {
+            const myAppointments = db.appointments.filter(a => a.studentId === state.currentUser.id);
+            const pendingAppointments = myAppointments.filter(a => a.status === 'Menunggu').length;
+            const myReports = db.behaviorReports.filter(r => r.studentId === state.currentUser.id).length;
+            const newArticles = db.articles.length;
+
+            let osisCards = '';
+            if (state.currentUser.isOsis) {
+                const pendingProposals = db.proposals.filter(p => p.status === 'Menunggu').length;
+                const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
+                osisCards = `
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Proposal OSIS Menunggu</h4>
+                        <p class="text-4xl font-bold text-purple-600 mt-2">${pendingProposals}</p>
+                        <p class="text-gray-500">Proposal yang butuh persetujuan.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Sisa Kas OSIS</h4>
+                        <p class="text-4xl font-bold text-indigo-600 mt-2">Rp ${totalBalance.toLocaleString('id-ID')}</p>
+                        <p class="text-gray-500">Total saldo keuangan saat ini.</p>
+                    </div>
+                `;
+            }
+            
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Siswa</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Janji Temu Menunggu</h4>
+                        <p class="text-4xl font-bold text-blue-600 mt-2">${pendingAppointments}</p>
+                        <p class="text-gray-500">Total janji temu yang menunggu persetujuan.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Materi Motivasi</h4>
+                        <p class="text-4xl font-bold text-green-600 mt-2">${newArticles}</p>
+                        <p class="text-gray-500">Artikel baru untuk dibaca.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Laporan Perilaku</h4>
+                        <p class="text-4xl font-bold text-yellow-600 mt-2">${myReports}</p>
+                        <p class="text-gray-500">Laporan dari guru mata pelajaran.</p>
+                    </div>
+                    ${osisCards}
+                </div>
+            `;
+        }
+        function GuruBKDashboard() {
+            const pendingAppointments = db.appointments.filter(a => a.counselorId === state.currentUser.id && a.status === 'Menunggu').length;
+             return `
+                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Guru BK</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Janji Temu Menunggu</h4>
+                        <p class="text-4xl font-bold text-blue-600 mt-2">${pendingAppointments}</p>
+                        <p class="text-gray-500">Janji temu yang perlu dikonfirmasi.</p>
+                    </div>
+                </div>
+            `;
+        }
+        function OsisDashboard() {
+            const pendingProposals = db.proposals.filter(p => p.status === 'Menunggu').length;
+            const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900">Dashboard OSIS</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Proposal Menunggu</h4>
+                        <p class="text-4xl font-bold text-purple-600 mt-2">${pendingProposals}</p>
+                        <p class="text-gray-500">Proposal yang butuh persetujuan.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Sisa Kas OSIS</h4>
+                        <p class="text-4xl font-bold text-indigo-600 mt-2">Rp ${totalBalance.toLocaleString('id-ID')}</p>
+                        <p class="text-gray-500">Total saldo keuangan saat ini.</p>
+                    </div>
+                </div>
+            `;
+        }
+        function PembinaDashboard() {
+            const pendingProposals = db.proposals.filter(p => p.status === 'Menunggu').length;
+            const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
+             return `
+                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Pembina</h3>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Proposal Menunggu</h4>
+                        <p class="text-4xl font-bold text-purple-600 mt-2">${pendingProposals}</p>
+                        <p class="text-gray-500">Proposal yang butuh persetujuan Anda.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Sisa Kas OSIS</h4>
+                        <p class="text-4xl font-bold text-indigo-600 mt-2">Rp ${totalBalance.toLocaleString('id-ID')}</p>
+                        <p class="text-gray-500">Total saldo keuangan saat ini.</p>
+                    </div>
+                </div>
+            `;
+        }
+        function GuruMapelDashboard() { 
+            const reportsCount = db.behaviorReports.filter(r => r.teacherId === state.currentUser.id).length;
+            const tasksCount = db.studentTasks.filter(t => t.teacherId === state.currentUser.id).length;
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Guru Mata Pelajaran</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Laporan Perilaku Terkirim</h4>
+                        <p class="text-4xl font-bold text-blue-600 mt-2">${reportsCount}</p>
+                        <p class="text-gray-500">Total laporan yang telah Anda buat.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Pekerjaan Siswa Dicatat</h4>
+                        <p class="text-4xl font-bold text-purple-600 mt-2">${tasksCount}</p>
+                        <p class="text-gray-500">Total pekerjaan/tugas yang dicatat.</p>
+                    </div>
+                </div>
+            `;
+        }
+       
+        // --- HALAMAN FITUR ---
+        function SiswaJanjiTemu() {
+            const myAppointments = db.appointments.filter(a => a.studentId === state.currentUser.id).sort((a,b) => b.id - a.id);
+            const getStatusClass = (status) => {
+                if (status === 'Disetujui') return 'bg-green-100 text-green-800';
+                if (status === 'Ditolak') return 'bg-red-100 text-red-800';
+                return 'bg-yellow-100 text-yellow-800';
+            };
+
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Buat Janji Temu</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Janji Temu</h4>
+                        <form id="form-janji-temu" class="space-y-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Pilih Guru BK</label>
+                                <select id="counselor" class="w-full mt-1 p-2 border rounded-lg">
+                                    ${db.users.filter(u => u.role === 'guru_bk').map(g => `<option value="${g.id}">${g.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Tanggal</label>
+                                <input id="date" type="date" class="w-full mt-1 p-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Waktu</label>
+                                <input id="time" type="time" class="w-full mt-1 p-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Topik Singkat</label>
+                                <textarea id="topic" rows="3" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Kesulitan mengatur waktu belajar"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Ajukan Janji Temu</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Janji Temu Anda</h4>
+                        <div class="space-y-4">
+                            ${myAppointments.length > 0 ? myAppointments.map(apt => `
+                                <div class="border p-4 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-semibold">${apt.topic}</p>
+                                            <p class="text-sm text-gray-600">dengan ${db.users.find(u => u.id === apt.counselorId).name}</p>
+                                            <p class="text-sm text-gray-500">${apt.date} pukul ${apt.time}</p>
+                                        </div>
+                                        <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${getStatusClass(apt.status)}">${apt.status}</span>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-gray-500">Anda belum memiliki riwayat janji temu.</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function SiswaChat() {
+             const counselors = db.users.filter(u => u.role === 'guru_bk');
+             const activeCounselor = db.users.find(u => u.id === state.activeChatUserId);
+             const chatKey = activeCounselor ? `${state.currentUser.id}-${activeCounselor.id}` : null;
+             const messages = chatKey && db.chats[chatKey] ? db.chats[chatKey] : [];
+
+             return `
+                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Chat Privat</h3>
+                <div class="bg-white rounded-xl shadow-lg h-[600px] flex">
+                    <div class="w-1/3 border-r flex flex-col">
+                        <div class="p-4 border-b font-semibold text-blue-800">Guru BK</div>
+                        <ul class="overflow-y-auto flex-1">
+                            ${counselors.map(c => `
+                                <li data-id="${c.id}" class="chat-contact p-4 cursor-pointer hover:bg-blue-50 border-b ${state.activeChatUserId === c.id ? 'bg-blue-100' : ''}">
+                                    ${c.name}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div class="w-2/3 flex flex-col">
+                        ${activeCounselor ? `
+                            <div class="p-4 border-b flex items-center">
+                                <h4 class="font-semibold text-blue-800">${activeCounselor.name}</h4>
+                            </div>
+                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-blue-50 space-y-4">
+                                ${messages.map(msg => {
+                                    const isSender = msg.sender === state.currentUser.id;
+                                    return `
+                                    <div class="flex ${isSender ? 'justify-end' : 'justify-start'}">
+                                        <div class="${isSender ? 'bg-blue-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
+                                            ${msg.text}
+                                        </div>
+                                    </div>
+                                    `
+                                }).join('')}
+                            </div>
+                            <div class="p-4 border-t bg-white">
+                                 <form id="chat-form" class="flex space-x-2">
+                                     <input type="text" id="chat-input" class="w-full p-2 border rounded-lg" placeholder="Ketik pesan...">
+                                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Kirim</button>
+                                 </form>
+                            </div>
+                        ` : `
+                            <div class="flex-1 flex items-center justify-center">
+                                <p class="text-gray-500">Pilih guru untuk memulai percakapan.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+             `;
+        }
+        function GuruBKJanjiTemu() {
+            const allAppointments = db.appointments.filter(a => a.counselorId === state.currentUser.id).sort((a,b) => b.id - a.id);
+            return `
+                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Kelola Janji Temu</h3>
+                 <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="space-y-4">
+                         ${allAppointments.map(apt => `
+                            <div class="border p-4 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">${db.users.find(u => u.id === apt.studentId).name}</p>
+                                    <p class="text-gray-700">"${apt.topic}"</p>
+                                    <p class="text-sm text-gray-500">${apt.date} - ${apt.time}</p>
+                                </div>
+                                ${apt.status === 'Menunggu' ? `
+                                <div class="flex space-x-2">
+                                    <button data-id="${apt.id}" class="approve-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Setujui</button>
+                                    <button data-id="${apt.id}" class="reject-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Tolak</button>
+                                </div>
+                                ` : `<p class="font-medium ${apt.status === 'Disetujui' ? 'text-green-600' : 'text-red-600'}">${apt.status}</p>`}
+                            </div>
+                         `).join('')}
+                    </div>
+                 </div>
+            `;
+        }
+        function GuruBKChat() {
+            const studentChats = Object.keys(db.chats).map(key => {
+                const [studentId, counselorId] = key.split('-');
+                if (counselorId === state.currentUser.id) {
+                    return db.users.find(u => u.id === studentId);
+                }
+                return null;
+            }).filter(Boolean);
+
+             const activeStudent = db.users.find(u => u.id === state.activeChatUserId);
+             const chatKey = activeStudent ? `${activeStudent.id}-${state.currentUser.id}` : null;
+             const messages = chatKey && db.chats[chatKey] ? db.chats[chatKey] : [];
+
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Chat Siswa</h3>
+                 <div class="bg-white rounded-xl shadow-lg h-[600px] flex">
+                    <div class="w-1/3 border-r flex flex-col">
+                        <div class="p-4 border-b font-semibold text-blue-800">Daftar Percakapan</div>
+                        <ul class="overflow-y-auto flex-1">
+                            ${studentChats.map(s => `
+                                <li data-id="${s.id}" class="chat-contact p-4 cursor-pointer hover:bg-blue-50 border-b ${state.activeChatUserId === s.id ? 'bg-blue-100' : ''}">
+                                    ${s.name}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                     <div class="w-2/3 flex flex-col">
+                        ${activeStudent ? `
+                            <div class="p-4 border-b flex items-center">
+                                <h4 class="font-semibold text-blue-800">${activeStudent.name}</h4>
+                            </div>
+                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-blue-50 space-y-4">
+                                ${messages.map(msg => {
+                                    const isSender = msg.sender === state.currentUser.id;
+                                    return `
+                                    <div class="flex ${isSender ? 'justify-end' : 'justify-start'}">
+                                        <div class="${isSender ? 'bg-blue-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
+                                            ${msg.text}
+                                        </div>
+                                    </div>
+                                    `
+                                }).join('')}
+                            </div>
+                            <div class="p-4 border-t bg-white">
+                                 <form id="chat-form" class="flex space-x-2">
+                                     <input type="text" id="chat-input" class="w-full p-2 border rounded-lg" placeholder="Ketik balasan...">
+                                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Balas</button>
+                                 </form>
+                            </div>
+                        ` : `
+                            <div class="flex-1 flex items-center justify-center">
+                                <p class="text-gray-500">Pilih percakapan untuk ditampilkan.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+        function MateriPage(canEdit = false) {
+            return `
+                 <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-3xl font-semibold text-blue-900">Materi Motivasi</h3>
+                    ${canEdit ? '<button id="add-materi-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Tambah Materi Baru</button>' : ''}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${db.articles.map(article => `
+                        <div data-article-id="${article.id}" class="article-card bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer">
+                             <span class="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${article.category}</span>
+                             <h4 class="text-xl font-semibold text-gray-800 mt-4 mb-2">${article.title}</h4>
+                             <p class="text-gray-600 text-sm mb-4">${article.content}</p>
+                             <div class="text-xs text-gray-400">
+                                 <span>Oleh: ${article.author}</span> | <span>${article.publishedDate}</span>
+                             </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        function OsisProposal(canApprove = false) {
+             const getStatusClass = (status) => {
+                if (status === 'Disetujui') return 'bg-green-100 text-green-800';
+                if (status === 'Ditolak') return 'bg-red-100 text-red-800';
+                return 'bg-yellow-100 text-yellow-800';
+            };
+            return `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-3xl font-semibold text-blue-900">Proposal Kegiatan OSIS</h3>
+                    ${!canApprove ? '<button id="add-proposal-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Buat Proposal Baru</button>' : ''}
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                     <div class="space-y-4">
+                         ${db.proposals.map(p => `
+                            <div class="border p-4 rounded-lg">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-semibold text-lg">${p.title}</p>
+                                        <p class="text-sm text-gray-600">Penanggung Jawab: ${p.pic}</p>
+                                        <p class="text-sm text-gray-500">Tanggal: ${p.date} | Anggaran: Rp ${p.budget.toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${getStatusClass(p.status)}">${p.status}</span>
+                                </div>
+                                <p class="mt-2 text-gray-700">${p.description}</p>
+                                ${canApprove && p.status === 'Menunggu' ? `
+                                <div class="flex space-x-2 mt-2">
+                                    <button data-id="${p.id}" class="approve-proposal-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Setujui</button>
+                                    <button data-id="${p.id}" class="reject-proposal-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Tolak</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                         `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        function OsisKeuangan() {
+            const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
+            return `
+                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Laporan Keuangan OSIS</h3>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                     <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Input Transaksi</h4>
+                        <form id="form-keuangan" class="space-y-4">
+                             <div>
+                                <label class="block text-gray-700 text-sm font-medium">Jenis Transaksi</label>
+                                 <select id="type" class="w-full mt-1 p-2 border rounded-lg">
+                                    <option value="Pemasukan">Pemasukan</option>
+                                    <option value="Pengeluaran">Pengeluaran</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Jumlah (Rp)</label>
+                                <input id="amount" type="number" class="w-full mt-1 p-2 border rounded-lg">
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 text-sm font-medium">Keterangan</label>
+                                <textarea id="description" rows="3" class="w-full mt-1 p-2 border rounded-lg"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Simpan</button>
+                        </form>
+                    </div>
+                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                         <div class="flex justify-between items-center mb-4">
+                             <h4 class="text-xl font-semibold text-blue-800">Riwayat Kas</h4>
+                             <p class="font-bold text-lg">Saldo: Rp ${totalBalance.toLocaleString('id-ID')}</p>
+                         </div>
+                         <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="py-2 px-4 text-left">Tanggal</th>
+                                        <th class="py-2 px-4 text-left">Keterangan</th>
+                                        <th class="py-2 px-4 text-right">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${db.finances.map(f => `
+                                        <tr class="border-b">
+                                            <td class="py-2 px-4 text-gray-600">${f.date}</td>
+                                            <td class="py-2 px-4">${f.description}</td>
+                                            <td class="py-2 px-4 text-right font-medium ${f.type === 'Pemasukan' ? 'text-green-600' : 'text-red-600'}">
+                                                ${f.type === 'Pemasukan' ? '+' : '-'} Rp ${f.amount.toLocaleString('id-ID')}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                         </div>
+                    </div>
+                 </div>
+            `;
+        }
+        function OsisForum() {
+             return `
+                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Forum Diskusi Internal OSIS</h3>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="mb-4">
+                        <input type="text" id="new-thread-title" class="w-full p-2 border rounded-lg" placeholder="Judul topik diskusi baru...">
+                        <button id="add-thread-btn" class="bg-blue-600 text-white px-4 py-2 mt-2 rounded-lg font-semibold hover:bg-blue-700">Buat Topik</button>
+                    </div>
+                    <div class="space-y-4">
+                        ${db.forum.map(thread => `
+                            <div class="border p-4 rounded-lg">
+                                <p class="font-semibold text-lg">${thread.title}</p>
+                                <p class="text-sm text-gray-500">dimulai oleh ${thread.author}</p>
+                                <div class="mt-2 pl-4 border-l-2">
+                                    ${thread.replies.map(reply => `<p><b>${reply.author}:</b> ${reply.text}</p>`).join('')}
+                                     <form class="mt-2" data-thread-id="${thread.id}">
+                                        <input type="text" class="reply-input w-full p-1 border rounded" placeholder="Tulis balasan...">
+                                    </form>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- HALAMAN FITUR LAIN ---
+        function LaporPerilakuPage() {
+            return `
+                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Lapor Perilaku Siswa</h3>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Laporan</h4>
+                        <form id="form-lapor-perilaku" class="space-y-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Pilih Siswa</label>
+                                 <select id="student" class="w-full mt-1 p-2 border rounded-lg">
+                                    ${db.users.filter(u => u.role === 'siswa').map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Laporan Singkat</label>
+                                <textarea id="report" rows="4" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Sangat aktif dan antusias di kelas hari ini."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Kirim Laporan</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                         <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Laporan Anda</h4>
+                         ${db.behaviorReports.filter(r => r.teacherId === state.currentUser.id).map(report => `
+                            <div class="border-b pb-2 mb-2">
+                                <p class="font-semibold">${db.users.find(u => u.id === report.studentId).name}</p>
+                                <p class="text-gray-700">"${report.report}"</p>
+                                <p class="text-xs text-gray-500">${report.date}</p>
+                            </div>
+                         `).join('')}
+                    </div>
+                 </div>
+            `;
+        }
+        
+        function PekerjaanSiswaPage() {
+             return `
+                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Catat Pekerjaan Siswa</h3>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Catatan</h4>
+                        <form id="form-pekerjaan-siswa" class="space-y-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Pilih Siswa</label>
+                                 <select id="student-task" class="w-full mt-1 p-2 border rounded-lg">
+                                    ${db.users.filter(u => u.role === 'siswa').map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                                </select>
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 text-sm font-medium">Nama Tugas/Pekerjaan</label>
+                                <input id="task-name" type="text" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Ulangan Harian 1">
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 text-sm font-medium">Nilai</label>
+                                <input id="task-score" type="number" class="w-full mt-1 p-2 border rounded-lg" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium">Catatan Singkat</label>
+                                <textarea id="task-notes" rows="3" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Perlu peningkatan di soal esai."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Simpan Catatan</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                         <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Pekerjaan Siswa (Dicatat oleh Anda)</h4>
+                         ${db.studentTasks.filter(r => r.teacherId === state.currentUser.id).map(task => `
+                            <div class="border-b pb-2 mb-2">
+                                <p class="font-semibold">${db.users.find(u => u.id === task.studentId).name} - ${task.task} (Nilai: ${task.score})</p>
+                                <p class="text-gray-700">"${task.notes}"</p>
+                                <p class="text-xs text-gray-500">${task.date}</p>
+                            </div>
+                         `).join('')}
+                    </div>
+                 </div>
+            `;
+        }
+
+        function PantauDiriPage() {
+            const studentId = state.currentUser.id;
+            const student = db.users.find(u => u.id === studentId);
+            if (!student) return `<p>Data siswa tidak ditemukan.</p>`;
+
+            const reports = db.behaviorReports.filter(r => r.studentId === student.id);
+            const tasks = db.studentTasks.filter(t => t.studentId === student.id);
+
+            return `
+                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Laporan Perkembangan Diri</h3>
+                 <div class="space-y-8">
+                     <div>
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Laporan Perilaku dari Guru</h4>
+                        <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                            ${reports.length > 0 ? reports.map(r => `
+                                <div class="border-b pb-2">
+                                    <p class="text-gray-700">"${r.report}"</p>
+                                    <p class="text-sm text-gray-500">- ${db.users.find(u => u.id === r.teacherId).name} (${r.date})</p>
+                                </div>
+                            `).join('') : '<p class="text-gray-500">Belum ada laporan perilaku.</p>'}
+                        </div>
+                    </div>
+                     <div>
+                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Catatan Pekerjaan & Tugas</h4>
+                        <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                             ${tasks.length > 0 ? tasks.map(t => `
+                                <div class="border-b pb-2">
+                                    <p class="font-semibold">${t.task} - Nilai: ${t.score}</p>
+                                    <p class="text-gray-700">Catatan: "${t.notes}"</p>
+                                    <p class="text-sm text-gray-500">- ${db.users.find(u => u.id === t.teacherId).name} (${t.date})</p>
+                                </div>
+                            `).join('') : '<p class="text-gray-500">Belum ada catatan pekerjaan.</p>'}
+                        </div>
+                    </div>
+                 </div>
+            `;
+        }
+        
+        // --- MODAL ---
+        function renderModal() {
+             const modalHTML = `
+                <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                         <div class="flex-shrink-0">${state.modal.header}</div>
+                         <div class="flex-grow overflow-y-auto mt-4 pr-4 -mr-4">${state.modal.content}</div>
+                         <div class="flex-shrink-0 mt-6 text-right">
+                            <button id="close-modal-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300">Tutup</button>
+                         </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+            document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-backdrop') {
+                    closeModal();
+                }
+            });
+        }
+        
+        function openModal(header, content) {
+            state.modal.isOpen = true;
+            state.modal.header = header;
+            state.modal.content = content;
+            render();
+        }
+
+        function closeModal() {
+            state.modal.isOpen = false;
+            render();
+        }
+
+        // --- ATTACH LISTENERS FOR PAGES ---
+        function attachSiswaDashboardListeners() {}
+        function attachSiswaJanjiTemuListeners() {
+            document.getElementById('form-janji-temu')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newAppointment = {
+                    id: db.appointments.length + 1,
+                    studentId: state.currentUser.id,
+                    counselorId: document.getElementById('counselor').value,
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    topic: document.getElementById('topic').value,
+                    status: 'Menunggu'
+                };
+                db.appointments.push(newAppointment);
+                render();
+            });
+        }
+        function attachGuruBKJanjiTemuListeners() {
+            document.querySelectorAll('.approve-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.id);
+                db.appointments.find(a => a.id === id).status = 'Disetujui';
+                render();
+            }));
+            document.querySelectorAll('.reject-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const id = parseInt(e.target.dataset.id);
+                db.appointments.find(a => a.id === id).status = 'Ditolak';
+                render();
+            }));
+        }
+        function attachMateriPageListeners(canEdit = false) {
+            document.querySelectorAll('.article-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const articleId = parseInt(card.dataset.articleId);
+                    const article = db.articles.find(a => a.id === articleId);
+                    if (article) {
+                        const header = `<h3 class="text-2xl font-bold text-blue-900">${article.title}</h3>
+                                      <p class="text-sm text-gray-500">Oleh: ${article.author} | Kategori: ${article.category}</p>`;
+                        openModal(header, article.fullContent);
+                    }
+                });
+            });
+
+            if (canEdit) {
+                 // Logic for adding new material can be added here
+            }
+        }
+        function attachOsisProposalListeners(canApprove = false) {
+             if (canApprove) {
+                document.querySelectorAll('.approve-proposal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    db.proposals.find(p => p.id === id).status = 'Disetujui';
+                    render();
+                }));
+                document.querySelectorAll('.reject-proposal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    db.proposals.find(p => p.id === id).status = 'Ditolak';
+                    render();
+                }));
+            }
+             document.getElementById('add-proposal-btn')?.addEventListener('click', () => {
+                // Logic for adding new proposal can be added here
+                alert('Fitur tambah proposal belum diimplementasikan.');
+            });
+        }
+        function attachOsisKeuanganListeners() {
+             document.getElementById('form-keuangan')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const description = document.getElementById('description').value;
+                const amount = parseInt(document.getElementById('amount').value);
+                if (description && amount > 0) {
+                    const newTransaction = {
+                        id: db.finances.length + 1,
+                        date: new Date().toISOString().split('T')[0],
+                        description: description,
+                        type: document.getElementById('type').value,
+                        amount: amount
+                    };
+                    db.finances.push(newTransaction);
+                    render();
+                }
+            });
+        }
+        function attachOsisForumListeners() {
+             document.getElementById('add-thread-btn')?.addEventListener('click', () => {
+                const title = document.getElementById('new-thread-title').value;
+                if(title) {
+                    db.forum.push({
+                        id: db.forum.length + 1,
+                        title: title,
+                        author: state.currentUser.name,
+                        replies: []
+                    });
+                    render();
+                }
+            });
+            document.querySelectorAll('.reply-input').forEach(input => {
+                input.parentElement.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const threadId = parseInt(e.target.dataset.threadId);
+                    const text = input.value;
+                    if(text) {
+                        db.forum.find(t => t.id === threadId).replies.push({
+                            author: state.currentUser.name,
+                            text: text
+                        });
+                        render();
+                    }
+                });
+            });
+        }
+        function attachSiswaChatListeners() {
+            document.querySelectorAll('.chat-contact').forEach(el => {
+                el.addEventListener('click', () => {
+                    state.activeChatUserId = el.dataset.id;
+                    render();
+                });
+            });
+
+            document.getElementById('chat-form')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (text && state.activeChatUserId) {
+                    const chatKey = `${state.currentUser.id}-${state.activeChatUserId}`;
+                    if (!db.chats[chatKey]) db.chats[chatKey] = [];
+                    db.chats[chatKey].push({
+                        sender: state.currentUser.id,
+                        text: text,
+                        timestamp: new Date()
+                    });
+                    input.value = '';
+                    render();
+                    document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
+                }
+            });
+        }
+        function attachGuruBKChatListeners() {
+            document.querySelectorAll('.chat-contact').forEach(el => {
+                el.addEventListener('click', () => {
+                    state.activeChatUserId = el.dataset.id;
+                    render();
+                });
+            });
+
+             document.getElementById('chat-form')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (text && state.activeChatUserId) {
+                    const chatKey = `${state.activeChatUserId}-${state.currentUser.id}`;
+                    if (!db.chats[chatKey]) db.chats[chatKey] = [];
+                    db.chats[chatKey].push({
+                        sender: state.currentUser.id,
+                        text: text,
+                        timestamp: new Date()
+                    });
+                    input.value = '';
+                    render();
+                    document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
+                }
+            });
+        }
+
+        function attachLaporPerilakuListeners() {
+            document.getElementById('form-lapor-perilaku')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                 const reportText = document.getElementById('report').value;
+                if (reportText) {
+                    const newReport = {
+                        id: db.behaviorReports.length + 1,
+                        studentId: document.getElementById('student').value,
+                        teacherId: state.currentUser.id,
+                        date: new Date().toISOString().split('T')[0],
+                        report: reportText,
+                    };
+                    db.behaviorReports.push(newReport);
+                    render();
+                }
+            });
+        }
+        
+        function attachPekerjaanSiswaListeners() {
+            document.getElementById('form-pekerjaan-siswa')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const taskName = document.getElementById('task-name').value;
+                const score = document.getElementById('task-score').value;
+                if(taskName && score) {
+                    const newRecord = {
+                        id: db.studentTasks.length + 1,
+                        studentId: document.getElementById('student-task').value,
+                        teacherId: state.currentUser.id,
+                        date: new Date().toISOString().split('T')[0],
+                        task: taskName,
+                        score: score,
+                        notes: document.getElementById('task-notes').value
+                    };
+                    db.studentTasks.push(newRecord);
+                    render();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>
