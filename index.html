@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIKOST - Aplikasi Konseling & OSIS</title>
+    <title>SolusiBK - Aplikasi Konseling & OSIS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -12,10 +12,10 @@
             font-family: 'Inter', sans-serif;
         }
         .sidebar-link:hover {
-            background-color: #1e40af; /* a darker blue */
+            background-color: #047857; /* emerald-700 */
         }
         .sidebar-link-active {
-            background-color: #1e3a8a; /* an even darker blue for active state */
+            background-color: #065f46; /* emerald-800 */
             font-weight: 600;
         }
         /* Custom scrollbar for better aesthetics */
@@ -23,23 +23,36 @@
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: #f0fdf4; /* green-50 */
         }
         ::-webkit-scrollbar-thumb {
-            background: #60a5fa;
+            background: #34d399; /* emerald-400 */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6;
+            background: #10b981; /* emerald-500 */
         }
         .prose { max-width: none; }
         .prose h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
         .prose p, .prose ul, .prose ol { margin-bottom: 1rem; }
         .prose ul, .prose ol { list-style-position: inside; padding-left: 1rem;}
         .prose li { margin-bottom: 0.5rem; }
+
+        .login-button-theme {
+            background: linear-gradient(45deg, #a8e063, #56ab2f);
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .login-button-theme:hover {
+            box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .btn-glow-green:hover { box-shadow: 0 0 12px 2px rgba(34, 197, 94, 0.4); }
+        .btn-glow-red:hover { box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.4); }
+        .btn-glow-gray:hover { box-shadow: 0 0 12px 2px rgba(107, 114, 128, 0.3); }
     </style>
 </head>
-<body class="bg-blue-50">
+<body class="bg-emerald-50">
     <div id="app" class="transition-all duration-300"></div>
 
     <script type="module">
@@ -50,15 +63,16 @@
         const app = document.getElementById('app');
 
         // --- DATABASE SIMULASI ---
-        const db = {
+        let db = {
             users: [
-                { id: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso', isOsis: true },
+                { id: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso' },
                 { id: 'siswa2', password: '123', role: 'siswa', name: 'Ani Yudhoyono' },
                 { id: 'gofaru', password: '123', role: 'guru_bk', name: 'Pak Gofarudiansyah' },
                 { id: 'rohman', password: '123', role: 'guru_bk', name: 'Pak Rohman' },
                 { id: 'osis1', password: '123', role: 'osis', name: 'Citra Kirana', position: 'Ketua OSIS' },
                 { id: 'pembina1', password: '123', role: 'pembina', name: 'Drs. Hartono' },
-                { id: 'gurumapel1', password: '123', role: 'guru_mapel', name: 'Ibu Susi (Matematika)' }
+                { id: 'gurumapel1', password: '123', role: 'guru_mapel', name: 'Ibu Susi (Matematika)' },
+                { id: 'admin', password: '123', role: 'admin', name: 'Admin Utama'}
             ],
             appointments: [
                 { id: 1, studentId: 'siswa1', counselorId: 'gofaru', date: '2025-10-05', time: '10:00', topic: 'Kesulitan Belajar', status: 'Disetujui' },
@@ -291,6 +305,13 @@
                         default: content = GuruMapelDashboard();
                     }
                     break;
+                case 'admin':
+                    switch (state.currentPage) {
+                        case 'dashboard': content = AdminDashboard(); break;
+                        case 'kelola-pengguna': content = KelolaPenggunaPage(); break;
+                        default: content = AdminDashboard();
+                    }
+                    break;
             }
             
             app.innerHTML = `
@@ -298,7 +319,7 @@
                     ${sidebar}
                     <div class="flex-1 flex flex-col overflow-hidden">
                         ${Header()}
-                        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-blue-50">
+                        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-emerald-50">
                             <div class="container mx-auto px-6 py-8">
                                 ${content}
                             </div>
@@ -322,7 +343,6 @@
 
             const role = state.currentUser.role;
             if (role === 'siswa') {
-                if (state.currentPage === 'dashboard') attachSiswaDashboardListeners();
                 if (state.currentPage === 'janji-temu') attachSiswaJanjiTemuListeners();
                 if (state.currentPage === 'chat') attachSiswaChatListeners();
                 if (state.currentPage === 'materi') attachMateriPageListeners();
@@ -342,39 +362,33 @@
             } else if (role === 'guru_mapel') {
                 if (state.currentPage === 'lapor-perilaku') attachLaporPerilakuListeners();
                 if (state.currentPage === 'pekerjaan-siswa') attachPekerjaanSiswaListeners();
+            } else if (role === 'admin') {
+                if (state.currentPage === 'kelola-pengguna') attachKelolaPenggunaListeners();
             }
         }
         
         // --- LOGIN & LOGOUT ---
         function LoginPage() {
             return `
-            <div class="min-h-screen bg-blue-800 flex items-center justify-center p-4">
+            <div class="min-h-screen bg-emerald-800 flex items-center justify-center p-4">
                 <div class="w-full max-w-md">
                      <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
                          <div class="flex flex-col items-center text-center mb-8">
-                            <i data-lucide="message-circle-heart" class="w-16 h-16 text-blue-600 mb-4"></i>
-                            <h1 class="text-3xl font-bold text-blue-900">Selamat Datang di SIKOST</h1>
+                            <i data-lucide="leaf" class="w-16 h-16 text-emerald-600 mb-4"></i>
+                            <h1 class="text-3xl font-bold text-emerald-900">Selamat Datang di SolusiBK</h1>
                         </div>
                         <form id="login-form" class="space-y-6">
                              <div>
                                 <label for="userId" class="text-sm font-medium text-gray-700">ID Pengguna</label>
-                                <input type="text" id="userId" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: siswa1, gofaru">
+                                <input type="text" id="userId" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Contoh: siswa1, gofaru, admin">
                             </div>
                             <div>
                                 <label for="password" class="text-sm font-medium text-gray-700">Password</label>
-                                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Default: 123">
+                                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Default: 123">
                             </div>
                             <p id="login-error" class="text-red-500 text-sm text-center hidden">ID Pengguna atau Password salah.</p>
-                            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors">Masuk</button>
+                            <button type="submit" class="w-full font-semibold py-3 rounded-lg shadow-lg active:scale-95 login-button-theme">Masuk</button>
                         </form>
-                         <div class="text-center text-xs text-gray-400 mt-6">
-                            <p class="font-bold">Akun Siswa:</p>
-                            <p>siswa1 (juga OSIS), siswa2</p>
-                            <p class="font-bold mt-2">Akun Staf:</p>
-                            <p>gofaru, rohman (Guru BK)</p>
-                             <p>osis1, pembina1 (OSIS)</p>
-                             <p>gurumapel1 (Guru Mapel)</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -409,12 +423,12 @@
         // --- HALAMAN & KOMPONEN ---
         function Header() {
              return `
-                <header class="flex justify-between items-center py-4 px-6 bg-white border-b-2 border-blue-100">
+                <header class="flex justify-between items-center py-4 px-6 bg-white border-b-2 border-emerald-100">
                     <div class="flex items-center">
-                       <h1 class="text-xl font-semibold text-blue-800">${state.currentUser.name}</h1>
+                       <h1 class="text-xl font-semibold text-emerald-800">${state.currentUser.name}</h1>
                     </div>
                      <div class="flex items-center">
-                        <button id="logout-btn" class="font-medium text-red-500 hover:text-red-700">Logout</button>
+                        <button id="logout-btn" class="font-semibold text-red-500 hover:text-red-700 transition-all duration-200 hover:scale-105">Logout</button>
                     </div>
                 </header>
             `;
@@ -427,7 +441,7 @@
             if (role === 'siswa') {
                 links = `
                     <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard</a>
-                    <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Konseling</h4>
+                    <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-emerald-300 uppercase tracking-wider">Konseling</h4>
                     <a href="#" data-page="janji-temu" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'janji-temu' ? 'sidebar-link-active' : ''}"><i data-lucide="calendar-plus" class="w-5 h-5 mr-3"></i>Buat Janji Temu</a>
                     <a href="#" data-page="chat" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'chat' ? 'sidebar-link-active' : ''}"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i>Chat Privat</a>
                     <a href="#" data-page="materi" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'materi' ? 'sidebar-link-active' : ''}"><i data-lucide="book-open" class="w-5 h-5 mr-3"></i>Materi Motivasi</a>
@@ -435,7 +449,7 @@
                 `;
                 if (state.currentUser.isOsis) {
                     links += `
-                        <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">OSIS</h4>
+                        <h4 class="px-4 pt-4 pb-2 text-xs font-semibold text-emerald-300 uppercase tracking-wider">OSIS</h4>
                         <a href="#" data-page="proposal" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'proposal' ? 'sidebar-link-active' : ''}"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i>Proposal Kegiatan</a>
                         <a href="#" data-page="keuangan" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'keuangan' ? 'sidebar-link-active' : ''}"><i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i>Laporan Keuangan</a>
                         <a href="#" data-page="forum" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'forum' ? 'sidebar-link-active' : ''}"><i data-lucide="users" class="w-5 h-5 mr-3"></i>Forum OSIS</a>
@@ -467,13 +481,18 @@
                     <a href="#" data-page="lapor-perilaku" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'lapor-perilaku' ? 'sidebar-link-active' : ''}"><i data-lucide="clipboard-edit" class="w-5 h-5 mr-3"></i>Lapor Perilaku Siswa</a>
                     <a href="#" data-page="pekerjaan-siswa" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'pekerjaan-siswa' ? 'sidebar-link-active' : ''}"><i data-lucide="book-check" class="w-5 h-5 mr-3"></i>Pekerjaan Siswa</a>
                 `;
+            } else if (role === 'admin') {
+                 links = `
+                    <a href="#" data-page="dashboard" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'dashboard' ? 'sidebar-link-active' : ''}"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>Dashboard Admin</a>
+                    <a href="#" data-page="kelola-pengguna" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg ${state.currentPage === 'kelola-pengguna' ? 'sidebar-link-active' : ''}"><i data-lucide="users-2" class="w-5 h-5 mr-3"></i>Kelola Pengguna</a>
+                `;
             }
 
             return `
-                <aside class="w-64 flex-shrink-0 bg-blue-800 text-white flex flex-col">
-                    <div class="h-20 flex items-center justify-center bg-blue-900">
-                        <i data-lucide="message-circle-heart" class="w-10 h-10 mr-2 text-blue-300"></i>
-                        <h1 class="text-2xl font-bold tracking-wider">SIKOST</h1>
+                <aside class="w-64 flex-shrink-0 bg-emerald-800 text-white flex flex-col">
+                    <div class="h-20 flex items-center justify-center bg-emerald-900">
+                        <i data-lucide="leaf" class="w-10 h-10 mr-2 text-emerald-300"></i>
+                        <h1 class="text-2xl font-bold tracking-wider">SolusiBK</h1>
                     </div>
                     <nav class="flex-1 px-4 py-4 space-y-1">
                         ${links}
@@ -508,16 +527,16 @@
             }
             
             return `
-                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Siswa</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard Siswa</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-500">
                         <h4 class="text-lg font-semibold text-gray-700">Janji Temu Menunggu</h4>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">${pendingAppointments}</p>
+                        <p class="text-4xl font-bold text-emerald-600 mt-2">${pendingAppointments}</p>
                         <p class="text-gray-500">Total janji temu yang menunggu persetujuan.</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-lime-500">
                         <h4 class="text-lg font-semibold text-gray-700">Materi Motivasi</h4>
-                        <p class="text-4xl font-bold text-green-600 mt-2">${newArticles}</p>
+                        <p class="text-4xl font-bold text-lime-600 mt-2">${newArticles}</p>
                         <p class="text-gray-500">Artikel baru untuk dibaca.</p>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
@@ -532,11 +551,11 @@
         function GuruBKDashboard() {
             const pendingAppointments = db.appointments.filter(a => a.counselorId === state.currentUser.id && a.status === 'Menunggu').length;
              return `
-                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Guru BK</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard Guru BK</h3>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-500">
                         <h4 class="text-lg font-semibold text-gray-700">Janji Temu Menunggu</h4>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">${pendingAppointments}</p>
+                        <p class="text-4xl font-bold text-emerald-600 mt-2">${pendingAppointments}</p>
                         <p class="text-gray-500">Janji temu yang perlu dikonfirmasi.</p>
                     </div>
                 </div>
@@ -546,7 +565,7 @@
             const pendingProposals = db.proposals.filter(p => p.status === 'Menunggu').length;
             const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
             return `
-                <h3 class="text-3xl font-semibold text-blue-900">Dashboard OSIS</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard OSIS</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
                         <h4 class="text-lg font-semibold text-gray-700">Proposal Menunggu</h4>
@@ -565,7 +584,7 @@
             const pendingProposals = db.proposals.filter(p => p.status === 'Menunggu').length;
             const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
              return `
-                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Pembina</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard Pembina</h3>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
                         <h4 class="text-lg font-semibold text-gray-700">Proposal Menunggu</h4>
@@ -584,17 +603,44 @@
             const reportsCount = db.behaviorReports.filter(r => r.teacherId === state.currentUser.id).length;
             const tasksCount = db.studentTasks.filter(t => t.teacherId === state.currentUser.id).length;
             return `
-                <h3 class="text-3xl font-semibold text-blue-900">Dashboard Guru Mata Pelajaran</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard Guru Mata Pelajaran</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-500">
                         <h4 class="text-lg font-semibold text-gray-700">Laporan Perilaku Terkirim</h4>
-                        <p class="text-4xl font-bold text-blue-600 mt-2">${reportsCount}</p>
+                        <p class="text-4xl font-bold text-emerald-600 mt-2">${reportsCount}</p>
                         <p class="text-gray-500">Total laporan yang telah Anda buat.</p>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
                         <h4 class="text-lg font-semibold text-gray-700">Pekerjaan Siswa Dicatat</h4>
                         <p class="text-4xl font-bold text-purple-600 mt-2">${tasksCount}</p>
                         <p class="text-gray-500">Total pekerjaan/tugas yang dicatat.</p>
+                    </div>
+                </div>
+            `;
+        }
+        function AdminDashboard() {
+            const totalUsers = db.users.length;
+            const totalStudents = db.users.filter(u => u.role === 'siswa').length;
+            const totalStaff = db.users.filter(u => u.role !== 'siswa' && u.role !== 'admin').length;
+            const totalAppointments = db.appointments.length;
+            return `
+                <h3 class="text-3xl font-semibold text-emerald-900">Dashboard Admin</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Total Pengguna</h4>
+                        <p class="text-4xl font-bold text-red-600 mt-2">${totalUsers}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Total Siswa</h4>
+                        <p class="text-4xl font-bold text-green-600 mt-2">${totalStudents}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Total Staf</h4>
+                        <p class="text-4xl font-bold text-yellow-600 mt-2">${totalStaff}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-500">
+                        <h4 class="text-lg font-semibold text-gray-700">Total Janji Temu</h4>
+                        <p class="text-4xl font-bold text-emerald-600 mt-2">${totalAppointments}</p>
                     </div>
                 </div>
             `;
@@ -610,10 +656,10 @@
             };
 
             return `
-                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Buat Janji Temu</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Buat Janji Temu</h3>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Janji Temu</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Form Janji Temu</h4>
                         <form id="form-janji-temu" class="space-y-4">
                             <div>
                                 <label class="block text-gray-700 text-sm font-medium">Pilih Guru BK</label>
@@ -633,11 +679,11 @@
                                 <label class="block text-gray-700 text-sm font-medium">Topik Singkat</label>
                                 <textarea id="topic" rows="3" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Kesulitan mengatur waktu belajar"></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Ajukan Janji Temu</button>
+                            <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Ajukan Janji Temu</button>
                         </form>
                     </div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Janji Temu Anda</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Riwayat Janji Temu Anda</h4>
                         <div class="space-y-4">
                             ${myAppointments.length > 0 ? myAppointments.map(apt => `
                                 <div class="border p-4 rounded-lg">
@@ -663,13 +709,13 @@
              const messages = chatKey && db.chats[chatKey] ? db.chats[chatKey] : [];
 
              return `
-                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Chat Privat</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Chat Privat</h3>
                 <div class="bg-white rounded-xl shadow-lg h-[600px] flex">
                     <div class="w-1/3 border-r flex flex-col">
-                        <div class="p-4 border-b font-semibold text-blue-800">Guru BK</div>
+                        <div class="p-4 border-b font-semibold text-emerald-800">Guru BK</div>
                         <ul class="overflow-y-auto flex-1">
                             ${counselors.map(c => `
-                                <li data-id="${c.id}" class="chat-contact p-4 cursor-pointer hover:bg-blue-50 border-b ${state.activeChatUserId === c.id ? 'bg-blue-100' : ''}">
+                                <li data-id="${c.id}" class="chat-contact p-4 cursor-pointer hover:bg-emerald-50 border-b ${state.activeChatUserId === c.id ? 'bg-emerald-100' : ''}">
                                     ${c.name}
                                 </li>
                             `).join('')}
@@ -678,14 +724,14 @@
                     <div class="w-2/3 flex flex-col">
                         ${activeCounselor ? `
                             <div class="p-4 border-b flex items-center">
-                                <h4 class="font-semibold text-blue-800">${activeCounselor.name}</h4>
+                                <h4 class="font-semibold text-emerald-800">${activeCounselor.name}</h4>
                             </div>
-                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-blue-50 space-y-4">
+                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-emerald-50 space-y-4">
                                 ${messages.map(msg => {
                                     const isSender = msg.sender === state.currentUser.id;
                                     return `
                                     <div class="flex ${isSender ? 'justify-end' : 'justify-start'}">
-                                        <div class="${isSender ? 'bg-blue-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
+                                        <div class="${isSender ? 'bg-emerald-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
                                             ${msg.text}
                                         </div>
                                     </div>
@@ -695,7 +741,7 @@
                             <div class="p-4 border-t bg-white">
                                  <form id="chat-form" class="flex space-x-2">
                                      <input type="text" id="chat-input" class="w-full p-2 border rounded-lg" placeholder="Ketik pesan...">
-                                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Kirim</button>
+                                     <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Kirim</button>
                                  </form>
                             </div>
                         ` : `
@@ -710,7 +756,7 @@
         function GuruBKJanjiTemu() {
             const allAppointments = db.appointments.filter(a => a.counselorId === state.currentUser.id).sort((a,b) => b.id - a.id);
             return `
-                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Kelola Janji Temu</h3>
+                 <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Kelola Janji Temu</h3>
                  <div class="bg-white p-6 rounded-xl shadow-lg">
                     <div class="space-y-4">
                          ${allAppointments.map(apt => `
@@ -722,8 +768,8 @@
                                 </div>
                                 ${apt.status === 'Menunggu' ? `
                                 <div class="flex space-x-2">
-                                    <button data-id="${apt.id}" class="approve-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Setujui</button>
-                                    <button data-id="${apt.id}" class="reject-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Tolak</button>
+                                    <button data-id="${apt.id}" class="approve-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Setujui</button>
+                                    <button data-id="${apt.id}" class="reject-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-red">Tolak</button>
                                 </div>
                                 ` : `<p class="font-medium ${apt.status === 'Disetujui' ? 'text-green-600' : 'text-red-600'}">${apt.status}</p>`}
                             </div>
@@ -746,13 +792,13 @@
              const messages = chatKey && db.chats[chatKey] ? db.chats[chatKey] : [];
 
             return `
-                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Chat Siswa</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Chat Siswa</h3>
                  <div class="bg-white rounded-xl shadow-lg h-[600px] flex">
                     <div class="w-1/3 border-r flex flex-col">
-                        <div class="p-4 border-b font-semibold text-blue-800">Daftar Percakapan</div>
+                        <div class="p-4 border-b font-semibold text-emerald-800">Daftar Percakapan</div>
                         <ul class="overflow-y-auto flex-1">
                             ${studentChats.map(s => `
-                                <li data-id="${s.id}" class="chat-contact p-4 cursor-pointer hover:bg-blue-50 border-b ${state.activeChatUserId === s.id ? 'bg-blue-100' : ''}">
+                                <li data-id="${s.id}" class="chat-contact p-4 cursor-pointer hover:bg-emerald-50 border-b ${state.activeChatUserId === s.id ? 'bg-emerald-100' : ''}">
                                     ${s.name}
                                 </li>
                             `).join('')}
@@ -761,14 +807,14 @@
                      <div class="w-2/3 flex flex-col">
                         ${activeStudent ? `
                             <div class="p-4 border-b flex items-center">
-                                <h4 class="font-semibold text-blue-800">${activeStudent.name}</h4>
+                                <h4 class="font-semibold text-emerald-800">${activeStudent.name}</h4>
                             </div>
-                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-blue-50 space-y-4">
+                            <div id="chat-window" class="flex-1 p-4 overflow-y-auto bg-emerald-50 space-y-4">
                                 ${messages.map(msg => {
                                     const isSender = msg.sender === state.currentUser.id;
                                     return `
                                     <div class="flex ${isSender ? 'justify-end' : 'justify-start'}">
-                                        <div class="${isSender ? 'bg-blue-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
+                                        <div class="${isSender ? 'bg-emerald-500 text-white' : 'bg-white'} p-3 rounded-lg max-w-xs">
                                             ${msg.text}
                                         </div>
                                     </div>
@@ -778,7 +824,7 @@
                             <div class="p-4 border-t bg-white">
                                  <form id="chat-form" class="flex space-x-2">
                                      <input type="text" id="chat-input" class="w-full p-2 border rounded-lg" placeholder="Ketik balasan...">
-                                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Balas</button>
+                                     <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Balas</button>
                                  </form>
                             </div>
                         ` : `
@@ -793,13 +839,13 @@
         function MateriPage(canEdit = false) {
             return `
                  <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-3xl font-semibold text-blue-900">Materi Motivasi</h3>
-                    ${canEdit ? '<button id="add-materi-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Tambah Materi Baru</button>' : ''}
+                    <h3 class="text-3xl font-semibold text-emerald-900">Materi Motivasi</h3>
+                    ${canEdit ? '<button id="add-materi-btn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Tambah Materi Baru</button>' : ''}
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${db.articles.map(article => `
                         <div data-article-id="${article.id}" class="article-card bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer">
-                             <span class="text-sm font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full">${article.category}</span>
+                             <span class="text-sm font-medium text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">${article.category}</span>
                              <h4 class="text-xl font-semibold text-gray-800 mt-4 mb-2">${article.title}</h4>
                              <p class="text-gray-600 text-sm mb-4">${article.content}</p>
                              <div class="text-xs text-gray-400">
@@ -818,8 +864,8 @@
             };
             return `
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-3xl font-semibold text-blue-900">Proposal Kegiatan OSIS</h3>
-                    ${!canApprove ? '<button id="add-proposal-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700">Buat Proposal Baru</button>' : ''}
+                    <h3 class="text-3xl font-semibold text-emerald-900">Proposal Kegiatan OSIS</h3>
+                    ${!canApprove ? '<button id="add-proposal-btn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Buat Proposal Baru</button>' : ''}
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                      <div class="space-y-4">
@@ -836,8 +882,8 @@
                                 <p class="mt-2 text-gray-700">${p.description}</p>
                                 ${canApprove && p.status === 'Menunggu' ? `
                                 <div class="flex space-x-2 mt-2">
-                                    <button data-id="${p.id}" class="approve-proposal-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600">Setujui</button>
-                                    <button data-id="${p.id}" class="reject-proposal-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">Tolak</button>
+                                    <button data-id="${p.id}" class="approve-proposal-btn bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Setujui</button>
+                                    <button data-id="${p.id}" class="reject-proposal-btn bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-red">Tolak</button>
                                 </div>
                                 ` : ''}
                             </div>
@@ -849,10 +895,10 @@
         function OsisKeuangan() {
             const totalBalance = db.finances.reduce((acc, curr) => curr.type === 'Pemasukan' ? acc + curr.amount : acc - curr.amount, 0);
             return `
-                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Laporan Keuangan OSIS</h3>
+                 <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Laporan Keuangan OSIS</h3>
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                      <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Input Transaksi</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Input Transaksi</h4>
                         <form id="form-keuangan" class="space-y-4">
                              <div>
                                 <label class="block text-gray-700 text-sm font-medium">Jenis Transaksi</label>
@@ -869,12 +915,12 @@
                                 <label class="block text-gray-700 text-sm font-medium">Keterangan</label>
                                 <textarea id="description" rows="3" class="w-full mt-1 p-2 border rounded-lg"></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Simpan</button>
+                            <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Simpan</button>
                         </form>
                     </div>
                      <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
                          <div class="flex justify-between items-center mb-4">
-                             <h4 class="text-xl font-semibold text-blue-800">Riwayat Kas</h4>
+                             <h4 class="text-xl font-semibold text-emerald-800">Riwayat Kas</h4>
                              <p class="font-bold text-lg">Saldo: Rp ${totalBalance.toLocaleString('id-ID')}</p>
                          </div>
                          <div class="overflow-x-auto">
@@ -905,11 +951,11 @@
         }
         function OsisForum() {
              return `
-                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Forum Diskusi Internal OSIS</h3>
+                 <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Forum Diskusi Internal OSIS</h3>
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <div class="mb-4">
                         <input type="text" id="new-thread-title" class="w-full p-2 border rounded-lg" placeholder="Judul topik diskusi baru...">
-                        <button id="add-thread-btn" class="bg-blue-600 text-white px-4 py-2 mt-2 rounded-lg font-semibold hover:bg-blue-700">Buat Topik</button>
+                        <button id="add-thread-btn" class="bg-emerald-600 text-white px-4 py-2 mt-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Buat Topik</button>
                     </div>
                     <div class="space-y-4">
                         ${db.forum.map(thread => `
@@ -932,10 +978,10 @@
         // --- HALAMAN FITUR LAIN ---
         function LaporPerilakuPage() {
             return `
-                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Lapor Perilaku Siswa</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Lapor Perilaku Siswa</h3>
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Laporan</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Form Laporan</h4>
                         <form id="form-lapor-perilaku" class="space-y-4">
                             <div>
                                 <label class="block text-gray-700 text-sm font-medium">Pilih Siswa</label>
@@ -947,11 +993,11 @@
                                 <label class="block text-gray-700 text-sm font-medium">Laporan Singkat</label>
                                 <textarea id="report" rows="4" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Sangat aktif dan antusias di kelas hari ini."></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Kirim Laporan</button>
+                            <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Kirim Laporan</button>
                         </form>
                     </div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-                         <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Laporan Anda</h4>
+                         <h4 class="text-xl font-semibold text-emerald-800 mb-4">Riwayat Laporan Anda</h4>
                          ${db.behaviorReports.filter(r => r.teacherId === state.currentUser.id).map(report => `
                             <div class="border-b pb-2 mb-2">
                                 <p class="font-semibold">${db.users.find(u => u.id === report.studentId).name}</p>
@@ -966,10 +1012,10 @@
         
         function PekerjaanSiswaPage() {
              return `
-                <h3 class="text-3xl font-semibold text-blue-900 mb-6">Catat Pekerjaan Siswa</h3>
+                <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Catat Pekerjaan Siswa</h3>
                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-fit">
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Form Catatan</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Form Catatan</h4>
                         <form id="form-pekerjaan-siswa" class="space-y-4">
                             <div>
                                 <label class="block text-gray-700 text-sm font-medium">Pilih Siswa</label>
@@ -989,11 +1035,11 @@
                                 <label class="block text-gray-700 text-sm font-medium">Catatan Singkat</label>
                                 <textarea id="task-notes" rows="3" class="w-full mt-1 p-2 border rounded-lg" placeholder="Contoh: Perlu peningkatan di soal esai."></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700">Simpan Catatan</button>
+                            <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Simpan Catatan</button>
                         </form>
                     </div>
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-                         <h4 class="text-xl font-semibold text-blue-800 mb-4">Riwayat Pekerjaan Siswa (Dicatat oleh Anda)</h4>
+                         <h4 class="text-xl font-semibold text-emerald-800 mb-4">Riwayat Pekerjaan Siswa (Dicatat oleh Anda)</h4>
                          ${db.studentTasks.filter(r => r.teacherId === state.currentUser.id).map(task => `
                             <div class="border-b pb-2 mb-2">
                                 <p class="font-semibold">${db.users.find(u => u.id === task.studentId).name} - ${task.task} (Nilai: ${task.score})</p>
@@ -1015,10 +1061,10 @@
             const tasks = db.studentTasks.filter(t => t.studentId === student.id);
 
             return `
-                 <h3 class="text-3xl font-semibold text-blue-900 mb-6">Laporan Perkembangan Diri</h3>
+                 <h3 class="text-3xl font-semibold text-emerald-900 mb-6">Laporan Perkembangan Diri</h3>
                  <div class="space-y-8">
                      <div>
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Laporan Perilaku dari Guru</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Laporan Perilaku dari Guru</h4>
                         <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
                             ${reports.length > 0 ? reports.map(r => `
                                 <div class="border-b pb-2">
@@ -1029,7 +1075,7 @@
                         </div>
                     </div>
                      <div>
-                        <h4 class="text-xl font-semibold text-blue-800 mb-4">Catatan Pekerjaan & Tugas</h4>
+                        <h4 class="text-xl font-semibold text-emerald-800 mb-4">Catatan Pekerjaan & Tugas</h4>
                         <div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
                              ${tasks.length > 0 ? tasks.map(t => `
                                 <div class="border-b pb-2">
@@ -1043,6 +1089,54 @@
                  </div>
             `;
         }
+        function KelolaPenggunaPage() {
+            const roleMapping = {
+                'siswa': 'Siswa',
+                'guru_bk': 'Guru BK',
+                'guru_mapel': 'Guru Mapel',
+                'osis': 'OSIS',
+                'pembina': 'Pembina',
+                'admin': 'Admin'
+            };
+            return `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-3xl font-semibold text-emerald-900">Kelola Pengguna</h3>
+                    <button id="add-user-btn" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 flex items-center shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">
+                        <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i>Tambah Pengguna
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="py-2 px-4 text-left">Nama</th>
+                                    <th class="py-2 px-4 text-left">ID Pengguna</th>
+                                    <th class="py-2 px-4 text-left">Peran</th>
+                                    <th class="py-2 px-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${db.users.map(user => `
+                                    <tr class="border-b">
+                                        <td class="py-2 px-4 font-medium">${user.name}</td>
+                                        <td class="py-2 px-4 text-gray-600">${user.id}</td>
+                                        <td class="py-2 px-4 text-gray-600">${roleMapping[user.role] || user.role}</td>
+                                        <td class="py-2 px-4 text-center">
+                                            ${user.role !== 'admin' ? `
+                                            <button data-id="${user.id}" class="delete-user-btn text-red-500 hover:text-red-700 transition-transform hover:scale-125">
+                                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                            </button>
+                                            ` : ''}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
         
         // --- MODAL ---
         function renderModal() {
@@ -1050,9 +1144,9 @@
                 <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                          <div class="flex-shrink-0">${state.modal.header}</div>
-                         <div class="flex-grow overflow-y-auto mt-4 pr-4 -mr-4">${state.modal.content}</div>
+                         <div class="flex-shrink-0 overflow-y-auto mt-4 pr-4 -mr-4">${state.modal.content}</div>
                          <div class="flex-shrink-0 mt-6 text-right">
-                            <button id="close-modal-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300">Tutup</button>
+                            <button id="close-modal-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-gray">Tutup</button>
                          </div>
                     </div>
                 </div>
@@ -1079,7 +1173,6 @@
         }
 
         // --- ATTACH LISTENERS FOR PAGES ---
-        function attachSiswaDashboardListeners() {}
         function attachSiswaJanjiTemuListeners() {
             document.getElementById('form-janji-temu')?.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -1114,7 +1207,7 @@
                     const articleId = parseInt(card.dataset.articleId);
                     const article = db.articles.find(a => a.id === articleId);
                     if (article) {
-                        const header = `<h3 class="text-2xl font-bold text-blue-900">${article.title}</h3>
+                        const header = `<h3 class="text-2xl font-bold text-emerald-900">${article.title}</h3>
                                       <p class="text-sm text-gray-500">Oleh: ${article.author} | Kategori: ${article.category}</p>`;
                         openModal(header, article.fullContent);
                     }
@@ -1278,6 +1371,95 @@
                     db.studentTasks.push(newRecord);
                     render();
                 }
+            });
+        }
+        
+        function attachKelolaPenggunaListeners() {
+            // Add User button listener
+            document.getElementById('add-user-btn')?.addEventListener('click', () => {
+                const formId = 'form-add-user';
+                const header = `<h3 class="text-2xl font-bold text-emerald-900">Tambah Pengguna Baru</h3>`;
+                const content = `
+                    <form id="${formId}" class="space-y-4">
+                        <p id="add-user-error" class="text-red-500 text-sm hidden"></p>
+                        <div>
+                            <label for="new-user-id" class="block text-sm font-medium text-gray-700">ID Pengguna</label>
+                            <input type="text" id="new-user-id" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label for="new-user-name" class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                            <input type="text" id="new-user-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                         <div>
+                            <label for="new-user-password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" id="new-user-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label for="new-user-role" class="block text-sm font-medium text-gray-700">Peran</label>
+                            <select id="new-user-role" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="siswa">Siswa</option>
+                                <option value="guru_bk">Guru BK</option>
+                                <option value="guru_mapel">Guru Mapel</option>
+                                <option value="osis">OSIS</option>
+                                <option value="pembina">Pembina</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-green">Simpan</button>
+                        </div>
+                    </form>
+                `;
+                openModal(header, content);
+
+                // Attach listener to the form inside the newly created modal
+                document.getElementById(formId)?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('new-user-id').value.trim();
+                    const name = document.getElementById('new-user-name').value.trim();
+                    const password = document.getElementById('new-user-password').value;
+                    const role = document.getElementById('new-user-role').value;
+                    const errorEl = document.getElementById('add-user-error');
+
+                    if (!id || !name || !password || !role) {
+                        errorEl.textContent = 'Semua field harus diisi.';
+                        errorEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (db.users.some(u => u.id === id)) {
+                        errorEl.textContent = `ID Pengguna '${id}' sudah digunakan.`;
+                        errorEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    db.users.push({ id, name, password, role });
+                    closeModal();
+                });
+            });
+
+            // Delete User button listeners
+            document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userId = e.currentTarget.dataset.id;
+                    const user = db.users.find(u => u.id === userId);
+                    if (!user) return;
+
+                    const header = `<h3 class="text-2xl font-bold text-red-700">Konfirmasi Penghapusan</h3>`;
+                    const content = `
+                        <p class="text-gray-700">Apakah Anda yakin ingin menghapus pengguna <strong>${user.name}</strong> (ID: ${user.id})?</p>
+                        <p class="text-sm text-red-600 mt-2">Tindakan ini tidak dapat diurungkan.</p>
+                        <div class="text-right mt-6">
+                            <button id="confirm-delete-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 shadow-md transform hover:-translate-y-0.5 transition-all duration-300 active:scale-95 btn-glow-red">Ya, Hapus</button>
+                        </div>
+                    `;
+                    openModal(header, content);
+
+                    document.getElementById('confirm-delete-btn')?.addEventListener('click', () => {
+                        db.users = db.users.filter(u => u.id !== userId);
+                        closeModal();
+                    });
+                });
             });
         }
 
