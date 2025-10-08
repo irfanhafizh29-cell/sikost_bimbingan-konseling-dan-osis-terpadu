@@ -65,8 +65,44 @@
         // --- DATABASE SIMULASI ---
         let db = {
             users: [
-                { id: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso' },
-                { id: 'siswa2', password: '123', role: 'siswa', name: 'Ani Yudhoyono' },
+                { id: 'BudiSantoso', password: '123', role: 'siswa', name: 'Budi Santoso' },
+                { id: 'AniYudhoyono', password: '123', role: 'siswa', name: 'Ani Yudhoyono' },
+                { id: 'AdifaMelaniPutri', password: '123', role: 'siswa', name: 'Adifa Melani Putri' },
+                { id: 'AnastasyaZajuli', password: '123', role: 'siswa', name: 'Anastasya Zajuli' },
+                { id: 'AndiniPutriPrasetyo', password: '123', role: 'siswa', name: 'Andini Putri Prasetyo' },
+                { id: 'Annisasetiawan', password: '123', role: 'siswa', name: 'Annisa setiawan' },
+                { id: 'AuraZahrani', password: '123', role: 'siswa', name: 'Aura Zahrani' },
+                { id: 'AurelliaRahman', password: '123', role: 'siswa', name: 'Aurellia Rahman' },
+                { id: 'CantikaPujiarti', password: '123', role: 'siswa', name: 'Cantika Pujiarti' },
+                { id: 'DarriellRiyadi', password: '123', role: 'siswa', name: 'Darriell Riyadi' },
+                { id: 'FazleMawla', password: '123', role: 'siswa', name: 'Fazle Mawla' },
+                { id: 'Fitriani', password: '123', role: 'siswa', name: 'Fitriani' },
+                { id: 'GalangRizkySadaya', password: '123', role: 'siswa', name: 'Galang Rizky Sadaya' },
+                { id: 'IndiraArpiana', password: '123', role: 'siswa', name: 'Indira Arpiana' },
+                { id: 'Irfanhafizhrizqullah', password: '123', role: 'siswa', name: 'Irfan hafizh rizqullah' },
+                { id: 'Kalilaazhara', password: '123', role: 'siswa', name: 'Kalila azhara' },
+                { id: 'KaniyaJuliaUtami', password: '123', role: 'siswa', name: 'Kaniya Julia Utami' },
+                { id: 'KautsarHidayatullah', password: '123', role: 'siswa', name: 'Kautsar Hidayatullah' },
+                { id: 'MikaAlGhaniYasin', password: '123', role: 'siswa', name: 'Mika Al Ghani Yasin' },
+                { id: 'Muhammadfaridramadhan', password: '123', role: 'siswa', name: 'Muhammad farid ramadhan' },
+                { id: 'MuhamadLanggiYuriPradipta', password: '123', role: 'siswa', name: 'Muhamad Langgi Yuri Pradipta' },
+                { id: 'MuhammadAddarQuthni', password: '123', role: 'siswa', name: 'Muhammad Addar Quthni' },
+                { id: 'MuhammadAwaAbdurahman', password: '123', role: 'siswa', name: 'Muhammad Awa Abdurahman' },
+                { id: 'NadiraIndriani', password: '123', role: 'siswa', name: 'Nadira Indriani' },
+                { id: 'NiaPutriRamadhani', password: '123', role: 'siswa', name: 'Nia Putri Ramadhani' },
+                { id: 'PutriAlysakeyla', password: '123', role: 'siswa', name: 'Putri Alysa keyla' },
+                { id: 'RaidDhaylaJabar', password: '123', role: 'siswa', name: 'Raid Dhayla Jabar' },
+                { id: 'RadityaGunawan', password: '123', role: 'siswa', name: 'Raditya Gunawan' },
+                { id: 'Rafiahmadalgibran', password: '123', role: 'siswa', name: 'Rafi ahmad algibran' },
+                { id: 'RainaMaira', password: '123', role: 'siswa', name: 'Raina Maira' },
+                { id: 'Raisyaariyanti', password: '123', role: 'siswa', name: 'Raisya ariyanti' },
+                { id: 'RazipAdiPratama', password: '123', role: 'siswa', name: 'Razip Adi Pratama' },
+                { id: 'RinduSalsabila', password: '123', role: 'siswa', name: 'Rindu Salsabila' },
+                { id: 'RubianaAzzahra', password: '123', role: 'siswa', name: 'Rubiana Azzahra' },
+                { id: 'ShintaRahayuPertiwiSujai', password: '123', role: 'siswa', name: 'Shinta Rahayu Pertiwi Sujai' },
+                { id: 'SitiAliftaAzzahraKhumairoh', password: '123', role: 'siswa', name: 'Siti Alifta Azzahra Khumairoh' },
+                { id: 'SulthanRifqi', password: '123', role: 'siswa', name: 'Sulthan Rifqi' },
+                { id: 'TiaraDwiRamadhani', password: '123', role: 'siswa', name: 'Tiara Dwi Ramadhani' },
                 { id: 'gofaru', password: '123', role: 'guru_bk', name: 'Pak Gofarudiansyah' },
                 { id: 'rohman', password: '123', role: 'guru_bk', name: 'Pak Rohman' },
                 { id: 'osis1', password: '123', role: 'osis', name: 'Citra Kirana', position: 'Ketua OSIS' },
@@ -75,22 +111,22 @@
                 { id: 'admin', password: '123', role: 'admin', name: 'Admin Utama'}
             ],
             appointments: [
-                { id: 1, studentId: 'siswa1', counselorId: 'gofaru', date: '2025-10-05', time: '10:00', topic: 'Kesulitan Belajar', status: 'Disetujui' },
-                { id: 2, studentId: 'siswa2', counselorId: 'gofaru', date: '2025-10-06', time: '14:00', topic: 'Masalah Pertemanan', status: 'Menunggu' },
+                { id: 1, studentId: 'BudiSantoso', counselorId: 'gofaru', date: '2025-10-05', time: '10:00', topic: 'Kesulitan Belajar', status: 'Disetujui' },
+                { id: 2, studentId: 'AniYudhoyono', counselorId: 'gofaru', date: '2025-10-06', time: '14:00', topic: 'Masalah Pertemanan', status: 'Menunggu' },
             ],
             behaviorReports: [
-                { id: 1, studentId: 'siswa1', teacherId: 'gurumapel1', date: '2025-09-30', report: 'Budi sangat aktif bertanya di kelas Matematika hari ini. Pertahankan!' }
+                { id: 1, studentId: 'BudiSantoso', teacherId: 'gurumapel1', date: '2025-09-30', report: 'Budi sangat aktif bertanya di kelas Matematika hari ini. Pertahankan!' }
             ],
             studentTasks: [
-                { id: 1, studentId: 'siswa1', teacherId: 'gurumapel1', date: '2025-09-28', task: 'Presentasi Kelompok', score: 85, notes: 'Mampu memimpin kelompok dengan baik.'}
+                { id: 1, studentId: 'BudiSantoso', teacherId: 'gurumapel1', date: '2025-09-28', task: 'Presentasi Kelompok', score: 85, notes: 'Mampu memimpin kelompok dengan baik.'}
             ],
             chats: {
-                'siswa1-gofaru': [
-                    { sender: 'siswa1', text: 'Selamat pagi, Pak. Saya ingin bertanya sesuatu.', timestamp: new Date().setHours(8, 0) },
+                'BudiSantoso-gofaru': [
+                    { sender: 'BudiSantoso', text: 'Selamat pagi, Pak. Saya ingin bertanya sesuatu.', timestamp: new Date().setHours(8, 0) },
                     { sender: 'gofaru', text: 'Pagi, Budi. Silakan, apa yang bisa Bapak bantu?', timestamp: new Date().setHours(8, 5) },
                 ],
-                 'siswa2-rohman': [
-                    { sender: 'siswa2', text: 'Permisi Pak Rohman, saya mau konsultasi.', timestamp: new Date().setHours(9, 15) },
+                 'AniYudhoyono-rohman': [
+                    { sender: 'AniYudhoyono', text: 'Permisi Pak Rohman, saya mau konsultasi.', timestamp: new Date().setHours(9, 15) },
                 ]
             },
             articles: [
